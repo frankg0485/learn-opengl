@@ -89,7 +89,14 @@ GLuint init_VAO() {
     vector<float> vertices = {
         -.5f, -.5f, 0,
         .5f, -.5f, 0,
-        0, .5f, 0
+        .5f, .5f, 0,
+        -.5f, .5f, 0,
+    };
+
+    // vertex indices for the rectangle
+    vector<uint> indices = {
+        0, 3, 2,
+        0, 2, 1
     };
 
 
@@ -107,6 +114,11 @@ GLuint init_VAO() {
     /// GL_DYNAMIC_DRAW: set many times, GPU uses many times
     // cout << vertices.size() * sizeof(float) << endl;
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices), indices.data(), GL_STATIC_DRAW);
 
     // position 0, 3 values per attribute, float type, don't normalize,
     // position of next data, pointer to start of data
@@ -155,6 +167,12 @@ int main() {
 
     GLuint VAO;
     VAO = init_VAO();
+
+    // wireframe mode: GL_LINE
+    // fill mode: GL_FILL
+    // front face is CCW vertices
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     while (!glfwWindowShouldClose(window)) {
         // check input
         processInput(window);
@@ -166,7 +184,8 @@ int main() {
         // draw triangle
         glUseProgram(program);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3); // triangles, start index of vertex array, 3 vertices
+        //glDrawArrays(GL_TRIANGLES, 0, 3); // triangles, start index of vertex array, 3 vertices
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window); // swap back buffer to the front
         glfwPollEvents(); // mouse, keyboard, etc.
