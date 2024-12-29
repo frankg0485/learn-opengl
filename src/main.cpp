@@ -171,7 +171,7 @@ int main() {
     // wireframe mode: GL_LINE
     // fill mode: GL_FILL
     // front face is CCW vertices
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     while (!glfwWindowShouldClose(window)) {
         // check input
@@ -181,8 +181,17 @@ int main() {
         glClearColor(.2f, .3f, .3f, 1.f); // set the color
         glClear(GL_COLOR_BUFFER_BIT); // color, depth, or stencil buffer
 
-        // draw triangle
+        // vary uniform with time
+        float time = glfwGetTime();
+        float val = (sin(time) / 2.f) + .5f;
+        int globalColorLoc = glGetUniformLocation(program, "globalColor");
+
+       
+        // must use program before updating uniform
         glUseProgram(program);
+        glUniform4f(globalColorLoc, 0, val, 0, 1);
+
+         // draw triangle
         glBindVertexArray(VAO);
         //glDrawArrays(GL_TRIANGLES, 0, 3); // triangles, start index of vertex array, 3 vertices
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
