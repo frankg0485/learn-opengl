@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <Shader.h>
 
 using namespace std;
 
@@ -16,72 +17,6 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-}
-
-string read_file(string filename) {
-    ifstream vertex_shader_file(filename);
-    if (!vertex_shader_file) {
-        cerr << "couldn't find file " << filename << endl;
-        return "";
-    }
-
-    stringstream buffer;
-    buffer << vertex_shader_file.rdbuf();
-    return buffer.str();
-}
-
-GLuint add_shader(string filename, GLuint type, char infoLog[], uint infoLogSize) {
-    string code_ptr = read_file(filename);
-    const char *shader_code = code_ptr.c_str(); 
-
-    GLuint shader;
-    shader = glCreateShader(type);
-
-    // attach glsl code to shader (pass 1 string as the source code)
-    glShaderSource(shader, 1, &shader_code, NULL);
-    glCompileShader(shader);
-
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(shader, infoLogSize, NULL, infoLog);
-        return -1;
-    }
-
-    return shader;
-}
-
-GLuint init_program() {
-    char infoLog[512];
-    GLuint vertexShader, fragShader;
-    if ((vertexShader = add_shader("../src/main.vert", GL_VERTEX_SHADER, infoLog, sizeof(infoLog))) == -1) {
-        cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << endl;
-        return -1;
-    }
-    if ((fragShader = add_shader("../src/main.frag", GL_FRAGMENT_SHADER, infoLog, sizeof(infoLog))) == -1) {
-        cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << endl;
-        return -1;
-    }
-
-    GLuint shaderProgram;
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragShader);
-    glLinkProgram(shaderProgram);
-
-    int success;
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        cerr << "ERROR::PROGRAM::SHADER_LINKING_FAILED\n" << infoLog << endl;
-        return -1;
-    }
-
-    // after linking them to the program, don't need shaders anymore
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragShader);
-
-    return shaderProgram;
 }
 
 GLuint init_VAO() {
@@ -163,10 +98,10 @@ int main() {
     
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    GLuint program;
-    if ((program = init_program()) == -1) {
-        return 1;
-    }
+    Shader shaderProgram("../src/main.vert", "../src/main.frag");
+    if (shaderProgram.getProgramID() == -1) return 1;
+
+    GLuint shaderProgramID = shaderProgram.getProgramID();
 
     GLuint VAO;
     VAO = init_VAO();
@@ -187,11 +122,10 @@ int main() {
         // vary uniform with time
         float time = glfwGetTime();
         float val = (sin(time) / 2.f) + .5f;
-        int globalColorLoc = glGetUniformLocation(program, "globalColor");
+        int globalColorLoc = glGetUniformLocation(shaderProgramID, "globalColor");
 
-       
         // must use program before updating uniform
-        glUseProgram(program);
+        shaderProgram.use(); 
         glUniform4f(globalColorLoc, 0, val, 0, 1);
 
          // draw triangle
