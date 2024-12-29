@@ -87,10 +87,10 @@ GLuint init_program() {
 GLuint init_VAO() {
     // all coordinates must be in [-1, 1] range
     vector<float> vertices = {
-        -.5f, -.5f, 0,
-        .5f, -.5f, 0,
-        .5f, .5f, 0,
-        -.5f, .5f, 0,
+        -.5f, -.5f, 0, 1, 0, 0,
+        .5f, -.5f, 0, 0, 1, 0,
+        .5f, .5f, 0, 0, 0, 1,
+        -.5f, .5f, 0, 1, 0, 1,
     };
 
     // vertex indices for the rectangle
@@ -122,10 +122,13 @@ GLuint init_VAO() {
 
     // position 0, 3 values per attribute, float type, don't normalize,
     // position of next data, pointer to start of data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 
     // enable attribute at location 0
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     return VAO;
 }
